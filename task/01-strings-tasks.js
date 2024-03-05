@@ -252,7 +252,7 @@ function encodeToRot13(str) {
     return str.split("").map(
         ch => String.fromCharCode(
             ch.charCodeAt(0) + (
-                ch.toLowerCase() == ch.toUpperCase() ? 0 : 
+                ch.toLowerCase() === ch.toUpperCase() ? 0 : 
                 ch.toLowerCase() < 'n' ? 13 : -13))).join("");
 }
 
@@ -300,7 +300,7 @@ function isString(value) {
  */
 function getCardId(value) {
     const suitSize = 13;
-    const suit = value.substring(value.length-1, value.length);
+    const suit = value.substring(value.length - 1, value.length);
 
     let suitIndex = -1;
     if (suit === '♣') {
