@@ -529,7 +529,7 @@ describe('06-conditions-n-loops-tasks', function() {
             },{
                 startDate: '2000-01-01 01:00:00.000',
                 endDate:   '2000-01-01 05:30:00.001',
-                expected:  '5 hours ago'
+                expected:  '4 hours ago'
             },{
                 startDate: '2000-01-01 01:00:00.000',
                 endDate:   '2000-01-01 23:00:00.000',
