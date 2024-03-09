@@ -17,8 +17,73 @@
  *  ]
  */
 function createCompassPoints() {
-    throw new Error('Not implemented');
-    var sides = ['N','E','S','W'];  // use array of cardinal directions only!
+    let sides = ['N','E','S','W'];  // use array of cardinal directions only!
+    const angle = 360 / 32;
+    const points = [];
+    let azimuth = 0;
+    let side = 0;
+    let quadrantNum = 0;
+
+    while (azimuth < 360) {
+        const curCardinal = sides[side];
+        const nextCardinal = side + 1 < sides.length ? sides[side + 1] : sides[0];
+
+        let abbr = "";
+        switch (quadrantNum) {
+            case 0:
+                abbr = curCardinal;
+                break;
+            case 1:
+                abbr = curCardinal + "b" + nextCardinal;
+                break;
+            case 2:
+                if (side % 2) {
+                    abbr = curCardinal + nextCardinal + curCardinal;
+                } else {
+                    abbr = curCardinal + curCardinal + nextCardinal;
+                }
+                break;
+            case 3:
+                if (side % 2) {
+                    abbr = nextCardinal + curCardinal + "b" + curCardinal;
+                } else {
+                    abbr = curCardinal + nextCardinal + "b" + curCardinal;
+                }
+                break;
+            case 4:
+                if (side % 2) {
+                    abbr = nextCardinal + curCardinal;
+                } else {
+                    abbr = curCardinal + nextCardinal;
+                }
+                break;
+            case 5:
+                if (side % 2) {
+                    abbr = nextCardinal + curCardinal + "b" + nextCardinal;
+                } else {
+                    abbr = curCardinal + nextCardinal + "b" + nextCardinal;
+                }
+                break;
+            case 6:
+                if (side % 2) {
+                    abbr = nextCardinal + nextCardinal + curCardinal;
+                } else {
+                    abbr = nextCardinal + curCardinal + nextCardinal;
+                }
+                break;
+            case 7:
+                abbr = nextCardinal + "b" + curCardinal;
+                break;
+        }
+
+        points.push({ abbreviation: abbr, azimuth: azimuth });
+        azimuth += angle;
+        side += azimuth % 90 == 0 ? 1 : 0;
+        if (++quadrantNum == 8) {
+            quadrantNum = 0;
+        } 
+    }
+    return points;
 }
 
 
