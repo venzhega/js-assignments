@@ -49,7 +49,7 @@ function getFizzBuzz(num) {
  */
 function getFactorial(n) {
     let factorial = 1;
-    for (let i = 0; i < n; i++){
+    for (let i = 0; i < n; i++) {
         factorial = factorial * (n - i);
     }
     return factorial;
@@ -69,11 +69,7 @@ function getFactorial(n) {
  *   -1,1  =>  0  ( = -1 + 0 + 1 )
  */
 function getSumBetweenNumbers(n1, n2) {
-    let sum = 0;
-    for (let i = n1; i <= n2; i++) {
-        sum += i;
-    }
-    return sum;
+    return (n2 - n1 + 1) * (n1 + n2) / 2;
 }
 
 
@@ -607,53 +603,6 @@ function evaluateTicTacToePosition(position) {
 
     return undefined;
 }
-
-function __evaluateTicTacToePosition__(position) {
-    let equal = true;
-    const positionLength = position.length;
-
-    debugger;
-
-    for (let i = 0; i < positionLength; i++) {
-        for (let j = 0; j < position[i].length; j++) {
-            equal = position[i][j] === position[i][0];
-        }
-        if (equal) {
-            return position[i][0];
-        }
-    }
-
-    for (let i = 0; i < positionLength; i++) {
-        equal = true;
-        for (let j = 0; j < position[i].length; j++) {
-            equal = equal && position[0][j] && position[i][j] && position[i][j] === position[0][j];
-        }
-        if (equal) {
-            return position[i][0];
-        }
-    }
-
-    equal = true;
-    for (let i = 0; i < positionLength; i++) {
-        equal = equal && position[0][0] === position[i][i];
-    }
-
-    if (equal) {
-        return position[0][0];
-    }
-
-    equal = true;
-    for (let i = positionLength - 1; i > 0; i--) {
-        equal = equal && position[positionLength - 1][positionLength - 1] === position[i][i];
-    }
-
-    if (equal) {
-        return position[positionLength - 1][positionLength - 1];
-    }
-
-    return undefined;
-}
-
 
 module.exports = {
     getFizzBuzz: getFizzBuzz,

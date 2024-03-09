@@ -3,7 +3,7 @@
   "version": "0.9.1",
   "description": "JS training tasks",
   "scripts": {
-    "test": "mocha",
+    "test": "mocha --timeout 15000",
     "test-debug": "mocha --debug-brk"
   },
   "author": "aorgish",

@@ -1,0 +1,51 @@
+
+> js-training@0.9.1 test
+> mocha .\test\07-yield-tests.js
+
+
+
+  07-yield-tasks
+    ✔ get99BottlesOfBeer should return the sequence of song lyric lines
+    ✔ getFibonacciSequence should return the Fibonacci sequence
+    1) depthTraversalTree should return the sequence of tree nodes in depth-first order
+    2) depthTraversalTree should process a deep tree
+    3) depthTraversalTree should process a wide tree
+    - breadthTraversalTree should return the sequence of tree nodes in depth-first order
+    - breadthTraversalTree should process a deep tree
+    - breadthTraversalTree should process a wide tree
+    - mergeSortedSequences should merge two sorted sequences into one sorted sequence
+
+
+  2 passing (130ms)
+  4 pending
+  3 failing
+
+  1) 07-yield-tasks
+       depthTraversalTree should return the sequence of tree nodes in depth-first order:
+     ReferenceError: v is not defined
+      at Object.depthTraversalTree (task\07-yield-tasks.js:113:11)
+      at depthTraversalTree.next (<anonymous>)
+      at Context.<anonymous> (test\07-yield-tests.js:274:17)
+      at Context.<anonymous> (extensions\it-optional.js:9:15)
+      at process.processImmediate (node:internal/timers:478:21)
+
+  2) 07-yield-tasks
+       depthTraversalTree should process a deep tree:
+     ReferenceError: v is not defined
+      at Object.depthTraversalTree (task\07-yield-tasks.js:113:11)
+      at depthTraversalTree.next (<anonymous>)
+      at Context.<anonymous> (test\07-yield-tests.js:306:17)
+      at Context.<anonymous> (extensions\it-optional.js:9:15)
+      at process.processImmediate (node:internal/timers:478:21)
+
+  3) 07-yield-tasks
+       depthTraversalTree should process a wide tree:
+     ReferenceError: v is not defined
+      at Object.depthTraversalTree (task\07-yield-tasks.js:113:11)
+      at depthTraversalTree.next (<anonymous>)
+      at Context.<anonymous> (test\07-yield-tests.js:321:17)
+      at Context.<anonymous> (extensions\it-optional.js:9:15)
+      at process.processImmediate (node:internal/timers:478:21)
+
+
+
