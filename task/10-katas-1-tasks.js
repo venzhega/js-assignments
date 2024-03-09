@@ -153,7 +153,32 @@ function* expandBraces(str) {
  *
  */
 function getZigZagMatrix(n) {
-    throw new Error('Not implemented');
+    const matrix = Array.from({ length: n }, (v, i) => []);
+    
+    let i = 1, j = 1;
+    for (let e = 0; e < n * n; e++) {
+        matrix[i - 1][j - 1] = e;
+        if ((i + j) % 2 == 0) {
+            if (j < n) {
+                j++;
+            } else {
+                i += 2;
+            }
+            if (i > 1) {
+                i--;
+            }
+        } else {
+            if (i < n) {
+                i++;
+            } else { 
+                j += 2;
+            }
+            if (j > 1) {
+                j--;
+            }
+        }
+    }
+    return matrix;
 }
 
 
@@ -202,7 +227,33 @@ function canDominoesMakeRow(dominoes) {
  * [ 1, 2, 4, 5]          => '1,2,4,5'
  */
 function extractRanges(nums) {
-    throw new Error('Not implemented');
+    const ranges = [];
+    const sorted = [...nums.filter(Number.isInteger)].sort((x,y) => Math.sign(x-y));
+    const sequenceBreak = (x,y) => y - x > 1 ;
+
+    let i = 0;
+    while (i < sorted.length) {
+        let j = i ;
+        while (j < sorted.length - 1 && !sequenceBreak(sorted[j], sorted[j+1])) {
+            ++j;
+        }
+
+        const from = sorted[i];
+        const thru = sorted[j];
+        const rangeLen = 1 + j - i;
+
+        if (from === thru) {
+            ranges.push([from]);
+        } else {
+            if (rangeLen > 2) {
+                ranges.push([from,thru]);
+            } else {
+                ranges.push([from], [thru]);
+            }
+        }
+        i = j+1;
+    }
+    return ranges.map(range => range.join('-')).join(',');
 }
 
 module.exports = {
