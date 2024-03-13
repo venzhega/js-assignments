@@ -17,71 +17,75 @@
  *  ]
  */
 function createCompassPoints() {
-    let sides = ['N','E','S','W'];  // use array of cardinal directions only!
-    const angle = 360 / 32;
+    let sides = ['N', 'E', 'S', 'W'];  // use array of cardinal directions only!
+    const windCount = 32;
+    const circumference = 360;
+    const sideDegrees = 90;
+    const angle = circumference / windCount;
     const points = [];
     let azimuth = 0;
     let side = 0;
-    let quadrantNum = 0;
+    let sideSector = 0;
 
-    while (azimuth < 360) {
-        const curCardinal = sides[side];
-        const nextCardinal = side + 1 < sides.length ? sides[side + 1] : sides[0];
+    while (azimuth < circumference) {
+        const currentSide = sides[side];
+        const nextSide = side + 1 < sides.length ? sides[side + 1] : sides[0];
 
-        let abbr = "";
-        switch (quadrantNum) {
+        let abbreviation = "";
+        switch (sideSector) {
             case 0:
-                abbr = curCardinal;
+                abbreviation = currentSide;
                 break;
             case 1:
-                abbr = curCardinal + "b" + nextCardinal;
+                abbreviation = currentSide + "b" + nextSide;
                 break;
             case 2:
                 if (side % 2) {
-                    abbr = curCardinal + nextCardinal + curCardinal;
+                    abbreviation = currentSide + nextSide + currentSide;
                 } else {
-                    abbr = curCardinal + curCardinal + nextCardinal;
+                    abbreviation = currentSide + currentSide + nextSide;
                 }
                 break;
             case 3:
                 if (side % 2) {
-                    abbr = nextCardinal + curCardinal + "b" + curCardinal;
+                    abbreviation = nextSide + currentSide + "b" + currentSide;
                 } else {
-                    abbr = curCardinal + nextCardinal + "b" + curCardinal;
+                    abbreviation = currentSide + nextSide + "b" + currentSide;
                 }
                 break;
             case 4:
                 if (side % 2) {
-                    abbr = nextCardinal + curCardinal;
+                    abbreviation = nextSide + currentSide;
                 } else {
-                    abbr = curCardinal + nextCardinal;
+                    abbreviation = currentSide + nextSide;
                 }
                 break;
             case 5:
                 if (side % 2) {
-                    abbr = nextCardinal + curCardinal + "b" + nextCardinal;
+                    abbreviation = nextSide + currentSide + "b" + nextSide;
                 } else {
-                    abbr = curCardinal + nextCardinal + "b" + nextCardinal;
+                    abbreviation = currentSide + nextSide + "b" + nextSide;
                 }
                 break;
             case 6:
                 if (side % 2) {
-                    abbr = nextCardinal + nextCardinal + curCardinal;
+                    abbreviation = nextSide + nextSide + currentSide;
                 } else {
-                    abbr = nextCardinal + curCardinal + nextCardinal;
+                    abbreviation = nextSide + currentSide + nextSide;
                 }
                 break;
             case 7:
-                abbr = nextCardinal + "b" + curCardinal;
+                abbreviation = nextSide + "b" + currentSide;
                 break;
         }
 
-        points.push({ abbreviation: abbr, azimuth: azimuth });
+        points.push({ abbreviation: abbreviation, azimuth: azimuth });
+
         azimuth += angle;
-        side += azimuth % 90 == 0 ? 1 : 0;
-        if (++quadrantNum == 8) {
-            quadrantNum = 0;
-        } 
+        side += azimuth % sideDegrees == 0 ? 1 : 0;
+        if (++sideSector == 8) {
+            sideSector = 0;
+        }
     }
     return points;
 }
@@ -120,8 +124,165 @@ function createCompassPoints() {
  *
  *   'nothing to do' => 'nothing to do'
  */
-function* expandBraces(str) {
-    throw new Error('Not implemented');
+function expandBraces(str) {
+    function bracePair(tkns, iPosn, iNest, lstCommas) {
+        if (iPosn >= tkns.length || iPosn < 0)
+            return null;
+
+        var t = tkns[iPosn],
+            n = (t === '{') ? (
+                iNest + 1
+            ) : (t === '}' ? (
+                iNest - 1
+            ) : iNest),
+            lst = (t === ',' && iNest === 1) ? (
+                lstCommas.concat(iPosn)
+            ) : lstCommas;
+
+        return n ? bracePair(tkns, iPosn + 1, n, lst) : {
+            close: iPosn,
+            commas: lst
+        };
+    }
+
+    // Parse of a SYNTAGM subtree
+    function andTree(dctSofar, tkns) {
+        if (!tkns.length) return [dctSofar, []];
+
+        var dctParse = dctSofar ? dctSofar : {
+            fn: and,
+            args: []
+        },
+            head = tkns[0],
+            tail = head ? tkns.slice(1) : [],
+            dctBrace = head === '{' ? bracePair(tkns, 0, 0, []) : null,
+            lstOR = dctBrace && dctBrace.close && dctBrace.commas.length ? (splitAt(dctBrace.close + 1, tkns)) : null;
+
+        return andTree({
+            fn: and,
+            args: dctParse.args.concat(
+                lstOR ? (
+                    orTree(dctParse, lstOR[0], dctBrace.commas)
+                ) : head
+            )
+        }, lstOR ? (
+            lstOR[1]
+        ) : tail);
+    }
+
+    // Parse of a PARADIGM subtree
+    function orTree(dctSofar, tkns, lstCommas) {
+        if (!tkns.length) return [dctSofar, []];
+        var iLast = lstCommas.length;
+
+        return {
+            fn: or,
+            args: splitsAt(
+                lstCommas, tkns
+            ).map(function (x, i) {
+                var ts = x.slice(
+                    1, i === iLast ? (
+                        -1
+                    ) : void 0
+                );
+
+                return ts.length ? ts : [''];
+            }).map(function (ts) {
+                return ts.length > 1 ? (
+                    andTree(null, ts)[0]
+                ) : ts[0];
+            })
+        };
+    }
+
+    // List of unescaped braces and commas, and remaining strings
+    function tokens(str) {
+        // Filter function excludes empty splitting artefacts
+        var toS = function (x) {
+            return x.toString();
+        };
+
+        return str.split(/(\\\\)/).filter(toS).reduce(function (a, s) {
+            return a.concat(s.charAt(0) === '\\' ? s : s.split(
+                /(\\*[{,}])/
+            ).filter(toS));
+        }, []);
+    }
+
+    // PARSE TREE OPERATOR (1 of 2)
+    // Each possible head * each possible tail
+    function and(args) {
+        var lng = args.length,
+            head = lng ? args[0] : null,
+            lstHead = "string" === typeof head ? (
+                [head]
+            ) : head;
+
+        return lng ? (
+            1 < lng ? lstHead.reduce(function (a, h) {
+                return a.concat(
+                    and(args.slice(1)).map(function (t) {
+                        return h + t;
+                    })
+                );
+            }, []) : lstHead
+        ) : [];
+    }
+
+    // PARSE TREE OPERATOR (2 of 2)
+    // Each option flattened
+    function or(args) {
+        return args.reduce(function (a, b) {
+            return a.concat(b);
+        }, []);
+    }
+
+    // One list split into two (first sublist length n)
+    function splitAt(n, lst) {
+        return n < lst.length + 1 ? [
+            lst.slice(0, n), lst.slice(n)
+        ] : [lst, []];
+    }
+
+    // One list split into several (sublist lengths [n])
+    function splitsAt(lstN, lst) {
+        return lstN.reduceRight(function (a, x) {
+            return splitAt(x, a[0]).concat(a.slice(1));
+        }, [lst]);
+    }
+
+    // Value of the parse tree
+    function evaluated(e) {
+        return typeof e === 'string' ? e :
+            e.fn(e.args.map(evaluated));
+    }
+
+    // JSON prettyprint (for parse tree, token list etc)
+    function pp(e) {
+        return JSON.stringify(e, function (k, v) {
+            return typeof v === 'function' ? (
+                '[function ' + v.name + ']'
+            ) : v;
+        }, 2)
+    }
+
+
+    // ----------------------- MAIN ------------------------
+
+    // s -> [s]
+    function expansions(s) {
+        // BRACE EXPRESSION PARSED
+        var dctParse = andTree(null, tokens(s))[0];
+
+        // ABSTRACT SYNTAX TREE LOGGED
+        // console.log(pp(dctParse));
+
+        // AST EVALUATED TO LIST OF STRINGS
+        return evaluated(dctParse);
+    }
+
+    return expansions(str);
+
 }
 
 
@@ -154,7 +315,7 @@ function* expandBraces(str) {
  */
 function getZigZagMatrix(n) {
     const matrix = Array.from({ length: n }, (v, i) => []);
-    
+
     let i = 1, j = 1;
     for (let e = 0; e < n * n; e++) {
         matrix[i - 1][j - 1] = e;
@@ -170,7 +331,7 @@ function getZigZagMatrix(n) {
         } else {
             if (i < n) {
                 i++;
-            } else { 
+            } else {
                 j += 2;
             }
             if (j > 1) {
@@ -203,7 +364,50 @@ function getZigZagMatrix(n) {
  *
  */
 function canDominoesMakeRow(dominoes) {
-    throw new Error('Not implemented');
+    debugger;
+    const graph = new Map();
+
+    for (const [x, y] of dominoes) {
+        if (!graph.has(x)) {
+            graph.set(x, []);
+        }
+
+        if (!graph.has(y)) {
+            graph.set(y, []);
+        }
+
+        graph.get(x).push(y);
+        graph.get(y).push(x);
+    }
+
+    function dfs(node) {
+        visited.add(node);
+        for (const neighbor of graph.get(node)) {
+            if (!visited.has(neighbor)) {
+                dfs(neighbor);
+            }
+        }
+    }
+
+    const visited = new Set();
+    let oddDegreeCount = 0;
+
+    for (const node of graph.keys()) {
+        if (graph.get(node).length % 2 !== 0) {
+            oddDegreeCount++;
+        }
+    }
+
+    if (oddDegreeCount === 0 || oddDegreeCount === 2) {
+        for (const node of graph.keys()) {
+            if (!visited.has(node)) {
+                dfs(node);
+                break;
+            }
+        }
+        return visited.size === graph.size;
+    }
+    return false;
 }
 
 
@@ -228,13 +432,13 @@ function canDominoesMakeRow(dominoes) {
  */
 function extractRanges(nums) {
     const ranges = [];
-    const sorted = [...nums.filter(Number.isInteger)].sort((x,y) => Math.sign(x-y));
-    const sequenceBreak = (x,y) => y - x > 1 ;
+    const sorted = [...nums].sort((x, y) => Math.sign(x - y));
+    const sequenceBreak = (x, y) => y - x > 1;
 
     let i = 0;
     while (i < sorted.length) {
-        let j = i ;
-        while (j < sorted.length - 1 && !sequenceBreak(sorted[j], sorted[j+1])) {
+        let j = i;
+        while (j < sorted.length - 1 && !sequenceBreak(sorted[j], sorted[j + 1])) {
             ++j;
         }
 
@@ -246,20 +450,20 @@ function extractRanges(nums) {
             ranges.push([from]);
         } else {
             if (rangeLen > 2) {
-                ranges.push([from,thru]);
+                ranges.push([from, thru]);
             } else {
                 ranges.push([from], [thru]);
             }
         }
-        i = j+1;
+        i = j + 1;
     }
-    return ranges.map(range => range.join('-')).join(',');
+    return ranges.map(r => r.join('-')).join(',');
 }
 
 module.exports = {
-    createCompassPoints : createCompassPoints,
-    expandBraces : expandBraces,
-    getZigZagMatrix : getZigZagMatrix,
-    canDominoesMakeRow : canDominoesMakeRow,
-    extractRanges : extractRanges
+    createCompassPoints: createCompassPoints,
+    expandBraces: expandBraces,
+    getZigZagMatrix: getZigZagMatrix,
+    canDominoesMakeRow: canDominoesMakeRow,
+    extractRanges: extractRanges
 };

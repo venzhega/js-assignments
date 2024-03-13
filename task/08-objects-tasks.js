@@ -110,34 +110,185 @@ function fromJSON(proto, json) {
  *  For more examples see unit tests.
  */
 
+class ComplexCssSelector {
+    constructor() {
+        this.selectors = new Map();
+        this.nextSelector = null;
+        this.moreThenOneValidationError = "Element, id and pseudo-element should not occur more then one time inside the selector";
+        this.orderValidationError = "Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element";
+    }
+
+    moreThenOneValidator(selector) {
+        if (this.selectors.has(selector)) {
+            throw new Error(this.moreThenOneValidationError);
+        }
+    }
+
+    orderValidator(selector) {
+        const prevSelector = [...this.selectors.keys()].at(-1);
+        if (prevSelector == undefined) {
+            return;
+        }
+
+        if (selector == "id") {
+            if (prevSelector == "element") {
+                return;
+            }
+        }
+
+        if (selector == "class") {
+            if (prevSelector == "id" || prevSelector == "element" || prevSelector == "class") {
+                return;
+            }
+        }
+
+        if (selector == "attribute") {
+            if (prevSelector == "id" || prevSelector == "element" || prevSelector == "class" || prevSelector == "attribute") {
+                return;
+            }
+        }
+
+        if (selector == "pseudo-class") {
+            if (prevSelector == "id" || prevSelector == "element" || prevSelector == "class" || prevSelector == "attribute" || prevSelector == "pseudo-class") {
+                return;
+            }
+        }
+
+        if (selector == "pseudo-element") {
+            if (prevSelector == "id" || prevSelector == "element" || prevSelector == "class" || prevSelector == "attribute" || prevSelector == "pseudo-class") {
+                return;
+            }
+        }
+
+        throw new Error(this.orderValidationError);
+    }
+
+    id(value) {
+        this.moreThenOneValidator("id");
+        this.orderValidator("id");
+
+        this.selectors.set("id", value);
+        return this;
+    }
+
+    class(value) {
+        this.orderValidator("class");
+
+        if (this.selectors.has("class")) {
+            this.selectors.get("class").push(value);
+        } else {
+            this.selectors.set("class", [value]);
+        }
+        return this;
+    }
+
+    element(value) {
+        this.moreThenOneValidator("element");
+        this.orderValidator("element");
+
+        this.selectors.set("element", value);
+        return this;
+    }
+
+    attr(value) {
+        this.orderValidator("attribute");
+
+        if (this.selectors.has("attribute")) {
+            this.selectors.get("attribute").push(value);
+        } else {
+            this.selectors.set("attribute", [value]);
+        }
+        return this;
+    }
+
+    pseudoClass(value) {
+        this.orderValidator("pseudo-class");
+
+        if (this.selectors.has("pseudo-class")) {
+            this.selectors.get("pseudo-class").push(value);
+        } else {
+            this.selectors.set("pseudo-class", [value]);
+        }
+        return this;
+    }
+
+    pseudoElement(value) {
+        this.moreThenOneValidator("pseudo-element");
+        this.orderValidator("pseudo-element");
+        
+        this.selectors.set("pseudo-element", value);
+        return this;
+    }
+
+    combine(combinator, selector) {
+        this.nextSelector = {
+            combinator: combinator,
+            selector: selector
+        };
+        return this;
+    }
+
+    stringify() {
+        let str = "";
+        this.selectors.forEach((val, key) => {
+            switch (key) {
+                case "element":
+                    str += `${val}`
+                    break;
+                case "id":
+                    str += `#${val}`
+                    break;
+                case "attribute":
+                    str += val.reduce((acc, cur, _) => acc + `[${cur}]`, "");
+                    break;
+                case "class":
+                    str += val.reduce((acc, cur, _) => acc + `.${cur}`, "");
+                    break;
+                case "pseudo-class":
+                    str += val.reduce((acc, cur, _) => acc + `:${cur}`, "");
+                    break;
+                case "pseudo-element":
+                    str += `::${val}`
+                    break;
+            }
+        });
+
+        if (this.nextSelector) {
+            str += ` ${this.nextSelector.combinator} ${this.nextSelector.selector.stringify()}`;
+        }
+
+        return str;
+    }
+}
+
 const cssSelectorBuilder = {
 
     element: function(value) {
-        throw new Error('Not implemented');
+        return new ComplexCssSelector().element(value);
     },
 
     id: function(value) {
-        throw new Error('Not implemented');
+        return new ComplexCssSelector().id(value);
     },
 
     class: function(value) {
-        throw new Error('Not implemented');
+        return new ComplexCssSelector().class(value);
     },
 
     attr: function(value) {
-        throw new Error('Not implemented');
+        return new ComplexCssSelector().attr(value);
     },
 
     pseudoClass: function(value) {
-        throw new Error('Not implemented');
+        return new ComplexCssSelector().pseudoClass(value);
     },
 
     pseudoElement: function(value) {
-        throw new Error('Not implemented');
+        return new ComplexCssSelector().pseudoElement(value);
     },
 
     combine: function(selector1, combinator, selector2) {
-        throw new Error('Not implemented');
+        return selector1.combine(combinator, selector2);
     },
 };
 

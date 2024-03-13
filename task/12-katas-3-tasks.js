@@ -28,9 +28,45 @@
  *   'NULL'      => false 
  */
 function findStringInSnakingPuzzle(puzzle, searchStr) {
-    throw new Error('Not implemented');
-}
+    const board = puzzle.map(x => Array.from(x));
+    let found = false;
 
+    const checkOrder = (row, col, word, tempWord, visited) => {
+        if (row < 0 || row >= board.length || col < 0 
+            || col >= board[row].length || 
+            board[row][col] !== word[tempWord.length]) {
+            return;
+        }
+        
+        if (visited[row][col] === 1) {
+            return;
+        }
+
+        tempWord += board[row][col];
+        visited[row][col] = 1;
+
+        if (tempWord === word) {
+            found = true;
+            return;
+        }
+
+        checkOrder(row, col + 1, word, tempWord, visited);
+        checkOrder(row, col - 1, word, tempWord, visited);
+        checkOrder(row + 1, col, word, tempWord, visited);
+        checkOrder(row - 1, col, word, tempWord, visited);
+    }
+
+    for (let i = 0; i < board.length; i++) {
+        for (let j = 0; j < board[i].length; j++) {
+            if (board[i][j] == searchStr[0]) {
+                const visited = new Array(board.length).fill(0).map(() => new Array(board[0].length).fill(0));
+                checkOrder(i, j, searchStr, "", visited);
+            }
+        }
+    }
+
+    return found;
+}
 
 /**
  * Returns all permutations of the specified string.
@@ -45,7 +81,27 @@ function findStringInSnakingPuzzle(puzzle, searchStr) {
  *    'abc' => 'abc','acb','bac','bca','cab','cba'
  */
 function* getPermutations(chars) {
-    throw new Error('Not implemented');
+    function swap(a, i, j) { 
+        const charArray = a.split(""); 
+        const temp = charArray[i]; 
+        charArray[i] = charArray[j]; 
+        charArray[j] = temp; 
+        return charArray.join(""); 
+    }
+
+    function* permute(str, left, right) { 
+        if (left == right) {
+            yield str; 
+        } else { 
+            for (let i = left; i <= right; i++) { 
+                str = swap(str, left, i); 
+                yield* permute(str, left + 1, right); 
+                str = swap(str, left, i); 
+            } 
+        } 
+    } 
+
+    yield* permute(chars, 0, chars.length - 1); 
 }
 
 
@@ -65,7 +121,16 @@ function* getPermutations(chars) {
  *    [ 1, 6, 5, 10, 8, 7 ] => 18  (buy at 1,6,5 and sell all at 10)
  */
 function getMostProfitFromStockQuotes(quotes) {
-    throw new Error('Not implemented');
+    const buyingDays = new Array(quotes.length).fill(1);
+    let profit = 0, m = 0;
+    quotes.slice().reverse().forEach((el, idx, arr) => {
+        if (m < el) {
+            buyingDays[idx] = 0;
+            m = el;
+        }
+        profit += m - el;
+    });
+    return profit;
 }
 
 
@@ -84,20 +149,20 @@ function getMostProfitFromStockQuotes(quotes) {
  * 
  */
 function UrlShortener() {
-    this.urlAllowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"+
-                           "abcdefghijklmnopqrstuvwxyz"+
-                           "0123456789-_.~!*'();:@&=+$,/?#[]";
+    this.urlAllowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+        "abcdefghijklmnopqrstuvwxyz" +
+        "0123456789-_.~!*'();:@&=+$,/?#[]";
 }
 
 UrlShortener.prototype = {
 
-    encode: function(url) {
-        throw new Error('Not implemented');
+    encode: function (url) {
+        const chars = url.split("").map(c => c.charCodeAt(0));
     },
-    
-    decode: function(code) {
+
+    decode: function (code) {
         throw new Error('Not implemented');
-    } 
+    }
 }
 
 

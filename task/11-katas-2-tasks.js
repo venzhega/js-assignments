@@ -34,7 +34,31 @@
  *
  */
 function parseBankAccount(bankAccount) {
-    throw new Error('Not implemented');
+    const arr = bankAccount.replace(/\s$/, '')
+        .split('\n')
+        .map(r => Array.from(r));
+
+    const digitPatters = {
+        " _ | ||_|": 0,
+        "     |  |": 1,
+        " _  _||_ ": 2,
+        " _  _| _|": 3,
+        "   |_|  |": 4,
+        " _ |_  _|": 5,
+        " _ |_ |_|": 6,
+        " _   |  |": 7,
+        " _ |_||_|": 8,
+        " _ |_| _|": 9
+    };
+
+    const accnt = [];
+    for (let i = 0; i < arr[0].length; i += 3) {
+        accnt.push([...arr[0].slice(i, i + 3), 
+                    ...arr[1].slice(i, i + 3), 
+                    ...arr[2].slice(i, i + 3)].join(""));
+    }
+
+    return parseInt(accnt.map(x => digitPatters[x] ?? "").join(""));
 }
 
 
@@ -63,7 +87,10 @@ function parseBankAccount(bankAccount) {
  *                                                                                                'characters.'
  */
 function* wrapText(text, columns) {
-    throw new Error('Not implemented');
+    const arr = text.match(new RegExp(`.{1,${columns}}(?:^|\\s|$)`, "g"));
+    while (arr.length) {
+        yield arr.shift().trim();
+    }
 }
 
 
@@ -100,7 +127,57 @@ const PokerRank = {
 }
 
 function getPokerHandRank(hand) {
-    throw new Error('Not implemented');
+    debugger;
+    const FACES = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+    const SUITS = ['♥', '♦', '♣', '♠'];
+
+	let faces = hand.map(card => FACES.indexOf(card.slice(0, -1)));
+	let suits = hand.map(card => SUITS.indexOf(card.slice(-1)));
+
+    if(hand.some((card, i, self) => i !== self.indexOf(card) ) 
+        || faces.some(face => face === -1) || suits.some(suit => suit === -1)) {
+            return 'invalid';
+    }
+
+    let flush = suits.every(suit => suit === suits[0]);
+	let groups = FACES.map((face,i) => faces.filter(j => i === j).length).sort((x, y) => y - x);
+	let shifted = faces.map(x => (x + 1) % 13);
+	let distance = Math.min(Math.max(...faces) - Math.min(...faces), Math.max(...shifted) - Math.min(...shifted));
+	let straight = groups[0] === 1 && distance < 5;
+    
+    if (straight && flush) {
+        return PokerRank.StraightFlush;
+    }
+
+	if (groups[0] === 4) {
+        return PokerRank.FourOfKind;
+    }                    
+
+	if (groups[0] === 3 && groups[1] === 2) {
+        return PokerRank.FullHouse;
+    }
+
+	if (flush) {
+        return PokerRank.Flush;
+    }
+	
+    if (straight) {
+        return PokerRank.Straight;
+    }
+
+	if (groups[0] === 3) {
+        return PokerRank.ThreeOfKind;
+    }
+
+	if (groups[0] === 2 && groups[1] === 2) {
+        return PokerRank.TwoPairs;
+    }
+
+	if (groups[0] === 2) {
+        return PokerRank.OnePair;
+    }
+
+	return PokerRank.HighCard;    
 }
 
 
@@ -135,9 +212,61 @@ function getPokerHandRank(hand) {
  *    '+-------------+\n'
  */
 function* getFigureRectangles(figure) {
-   throw new Error('Not implemented');
+    const lines = figure.split("\n");
+    const height = lines.length;
+    const width = lines[0].length;
+  
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (lines[y][x] === "+") {
+          for (let bottomY = y + 1; bottomY < height; bottomY++) {
+            if (lines[bottomY][x] === "+") {
+              for (let rightX = x + 1; rightX < width; rightX++) {
+                if (lines[y][rightX] === "+") {
+                  if (lines[bottomY][rightX] === "+") {
+                    if (isRectangle(lines, x, y, rightX, bottomY)) {
+                      yield drawRectangle(rightX - x + 1, bottomY - y + 1);
+                      rightX = width;
+                      bottomY = height;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
 }
 
+function isRectangle(lines, startX, startY, endX, endY) {
+    for (let y = startY; y <= endY; y++) {
+      for (let x = startX; x <= endX; x++) {
+        if (y === startY || y === endY) {
+          if ((x === startX || x === endX) && lines[y][x] !== "+") {
+            return false;
+          }
+        } else {
+          if (lines[y][x] === "+") {
+            return false;
+          }
+          if ((x === startX || x === endX) && lines[y][x] !== "|") {
+            return false;
+          }
+        }
+      }
+    }
+    return true;
+}
+
+function drawRectangle(width, height) {
+    let rectangle = "+" + "-".repeat(width - 2) + "+\n";
+    for (let y = 1; y < height - 1; y++) {
+      rectangle += "|" + " ".repeat(width - 2) + "|\n";
+    }
+    rectangle += "+" + "-".repeat(width - 2) + "+\n";
+    return rectangle;
+}
 
 module.exports = {
     parseBankAccount : parseBankAccount,
