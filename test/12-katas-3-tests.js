@@ -103,7 +103,7 @@ describe('12-katas-3-tasks', function() {
         [
             'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/imul',
             'https://en.wikipedia.org/wiki/Percent-encoding#Types_of_URI_characters',
-            'https://en.wikipedia.org/wiki/Binary-to-text_encoding#Encoding_plain_text'
+            'https://en.wikipedia.org/wiki/Binary-to-t  ext_encoding#Encoding_plain_text'
         ].forEach(data => {
             var urlShortener = new tasks.UrlShortener();
             var actual = urlShortener.encode(data);

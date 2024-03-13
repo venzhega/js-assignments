@@ -157,7 +157,7 @@ function UrlShortener() {
 UrlShortener.prototype = {
 
     encode: function (url) {
-        const chars = url.split("").map(c => c.charCodeAt(0));
+        throw new Error('Not implemented');
     },
 
     decode: function (code) {
